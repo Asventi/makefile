@@ -78,9 +78,9 @@ else
 endif
 
 ifeq ($(MODE), debug)
-	CFLAGS += -g3
+	CFLAGS = -g3
 else ifeq ($(MODE), fsanitize)
-	CFLAGS += -g3 -fsanitize=address
+	CFLAGS = -g3 -fsanitize=address
 else ifeq ($(MODE), optimize)
 	CFLAGS += -O2
 else ifeq ($(MODE), full-optimize)
