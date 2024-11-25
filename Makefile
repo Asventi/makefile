@@ -52,7 +52,8 @@ INCLUDES	=	$(INCS_DIR) \
 
 CC			=	cc
 CFLAGS		+=	-Wall -Wextra -Werror
-CPPFLAGS	+=	$(addprefix -I, $(INCLUDES))
+CPPFLAGS	+=	$(addprefix -I, $(INCLUDES)) \
+			-MMD -MP
 
 LDFLAGS		+=	$(addprefix -L, $(dir $(LIBS_PATH)))
 LDLIBS		+=	$(addprefix -l, $(LIBS))
