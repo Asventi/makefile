@@ -1,16 +1,16 @@
 # **************************************************************************** #
 #                                                                              #
 #                                                         :::      ::::::::    #
-#    Makefile copy                                      :+:      :+:    :+:    #
+#    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
 #    By: pjarnac <pjarnac@student.42lyon.fr>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/11/19 11:53:22 by pjarnac           #+#    #+#              #
-#    Updated: 2024/11/21 15:39:38 by pjarnac          ###   ########.fr        #
+#    Updated: 2024/12/20 20:08:38 by pjarnac          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = libftprintf.a
+NAME = exemple
 
 # ================FILES================ #
 
@@ -26,27 +26,29 @@ DEPS			=	$(patsubst %.c, $(BUILD_DIR)%.d, $(SRC))
 
 # ================ROOT================= #
 
-SRC 		=	ft_printf.c \
+SRC 		=	exemple.c \
 
 # ===============FORMATS=============== #
 
-SRC += $(addprefix $(FORMATS_DIR), $(FORMATS_SRC))
+SRC += $(addprefix $(EXEMPLE_DIR), $(EXEMPLE_SRC))
 
-FORMATS_DIR =	formats/
-FORMATS_SRC =	formats.c \
-				num_formats.c \
-				str_formats.c \
+EXEMPLE_DIR =	exemple/
+EXEMPLE_SRC =	source1.c \
+				source2.c \
 
 # ==========LIBS / INCLUDES============ #
 
 LIBS_DIR	=	lib/
-LIBS_PATH	=	libft/libft.a
+LIBS_PATH	=	libft/libmlx.a
 LIBS_PATH	:=	$(addprefix $(LIBS_DIR), $(LIBS_PATH))
 LIBS		=	$(patsubst lib%.a, %, $(notdir $(LIBS_PATH)))
+SYS_LIBS	=	xext x11
+SYS_LIBS	:=	$(addprefix "-l", $(SYS_LIBS))
 
 INCS_DIR	=	includes/
 INCLUDES	=	$(INCS_DIR) \
-				$(dir $(LIBS_PATH))$(INCS_DIR)
+				$(addprefix $(dir $(LIBS_PATH)), $(INCS_DIR)) \
+				$(dir $(LIBS_PATH))
 
 # ===============CONFIGS=============== #
 
@@ -104,7 +106,7 @@ show:
 
 $(NAME): $(LIBS_PATH) $(OBJS)
 	@echo $(MODE) > $(MODE_TRACE)
-	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) $(SYS_LIBS) -o $(NAME)
 
 $(BUILD_DIR)%.o: $(SRC_DIR)%.c
 	@mkdir -p $(@D)
