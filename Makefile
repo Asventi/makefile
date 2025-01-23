@@ -1,16 +1,16 @@
 # **************************************************************************** #
 #                                                                              #
 #                                                         :::      ::::::::    #
-#    Makefile copy                                      :+:      :+:    :+:    #
+#    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
 #    By: pjarnac <pjarnac@student.42lyon.fr>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/11/19 11:53:22 by pjarnac           #+#    #+#              #
-#    Updated: 2024/11/21 15:39:38 by pjarnac          ###   ########.fr        #
+#    Updated: 2024/12/20 20:08:38 by pjarnac          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = libftprintf.a
+NAME = fdf
 
 # ================FILES================ #
 
@@ -26,27 +26,41 @@ DEPS			=	$(patsubst %.c, $(BUILD_DIR)%.d, $(SRC))
 
 # ================ROOT================= #
 
-SRC 		=	ft_printf.c \
+SRC 		=	fdf.c \
+				hooks.c \
 
-# ===============FORMATS=============== #
+SRC_BONUS	=	fdf_bonus.c \
+				hooks_bonus.c \
 
-SRC += $(addprefix $(FORMATS_DIR), $(FORMATS_SRC))
+# ================UTILS================ #
 
-FORMATS_DIR =	formats/
-FORMATS_SRC =	formats.c \
-				num_formats.c \
-				str_formats.c \
+SRC += $(addprefix $(UTILS_DIR), $(UTILS_SRC))
+
+UTILS_DIR =		utils/
+UTILS_SRC =		parse.c \
+				errors.c \
+				colors.c \
+
+# ==============RENDERING============== #
+
+SRC += $(addprefix $(RENDERING_DIR), $(RENDERING_SRC))
+
+RENDERING_DIR =		rendering/
+RENDERING_SRC =		render.c \
 
 # ==========LIBS / INCLUDES============ #
 
 LIBS_DIR	=	lib/
-LIBS_PATH	=	libft/libft.a
+LIBS_PATH	=	libft/libft.a minilibx/libmlx.a neflibx/libneflibx.a
 LIBS_PATH	:=	$(addprefix $(LIBS_DIR), $(LIBS_PATH))
 LIBS		=	$(patsubst lib%.a, %, $(notdir $(LIBS_PATH)))
+SYS_LIBS	=	Xext X11 m
+SYS_LIBS	:=	$(addprefix -l, $(SYS_LIBS))
 
 INCS_DIR	=	includes/
 INCLUDES	=	$(INCS_DIR) \
-				$(dir $(LIBS_PATH))$(INCS_DIR)
+				$(addsuffix $(INCS_DIR), $(dir $(LIBS_PATH))) \
+				$(dir $(LIBS_PATH))
 
 # ===============CONFIGS=============== #
 
@@ -56,7 +70,7 @@ CPPFLAGS	+=	$(addprefix -I, $(INCLUDES)) \
 			-MMD -MP
 
 LDFLAGS		+=	$(addprefix -L, $(dir $(LIBS_PATH)))
-LDLIBS		+=	$(addprefix -l, $(LIBS))
+LDLIBS		+=	$(addprefix -l, $(LIBS)) $(SYS_LIBS)
 
 AR			=	ar
 ARFLAGS		=	-rcs
@@ -65,7 +79,7 @@ MAKEFLAGS	+=	--no-print-directory
 
 # ================MODES================ #
 
-MODES		:= debug fsanitize optimize full-optimize
+MODES		:= debug fsanitize optimize full-optimize bonus
 
 MODE_TRACE	:= $(BUILD_DIR).mode_trace
 LAST_MODE	:= $(shell cat $(MODE_TRACE) 2>/dev/null)
@@ -79,13 +93,15 @@ else
 endif
 
 ifeq ($(MODE), debug)
-	CFLAGS = -g3
+	CFLAGS = -g3 -Og
 else ifeq ($(MODE), fsanitize)
-	CFLAGS = -g3 -fsanitize=address
+	CFLAGS = -g3 -Og -fsanitize=address
 else ifeq ($(MODE), optimize)
-	CFLAGS += -O2
-else ifeq ($(MODE), full-optimize)
 	CFLAGS += -O3
+else ifeq ($(MODE), full-optimize)
+	CFLAGS += -Ofast
+else ifeq ($(MODE), bonus)
+	SRC := $(SRC_BONUS) $(filter-out $(patsubst %_bonus.c, %.c, $(SRC_BONUS)), $(SRC))
 else ifneq ($(MODE),)
 	ERROR = MODE
 endif
@@ -98,9 +114,6 @@ endif
 
 .PHONY: all
 all: $(NAME)
-
-show:
-	@echo $(SRC_TEST)
 
 $(NAME): $(LIBS_PATH) $(OBJS)
 	@echo $(MODE) > $(MODE_TRACE)
@@ -140,6 +153,10 @@ print-%:
 
 .PHONY: force
 force:
+
+.PHONY: norminette
+norminette:
+	@norminette $(addprefix $(SRC_DIR), $(SRC)) $(INCS_DIR)
 
 -include $(DEPS)
 
