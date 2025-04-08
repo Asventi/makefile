@@ -3,20 +3,20 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: pjarnac <pjarnac@student.42lyon.fr>        +#+  +:+       +#+         #
+#    By: nseon <nseon@student.42lyon.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/11/19 11:53:22 by pjarnac           #+#    #+#              #
-#    Updated: 2024/11/21 15:39:38 by pjarnac          ###   ########.fr        #
+#    Updated: 2025/04/02 11:56:43 by nseon            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = fdf
+NAME = progname
 
 # ================FILES================ #
 
 MAKE_DIR		:=	.make/
 BUILD_DIR		:=	$(MAKE_DIR)build_$(shell git branch --show-current)/
-BASE_BUILD_DIR	:= normal/
+BASE_BUILD_DIR	:=	normal/
 
 SRC_DIR			=	src/
 
@@ -26,40 +26,29 @@ DEPS			=	$(patsubst %.c, $(BUILD_DIR)%.d, $(SRC))
 
 # ================ROOT================= #
 
-SRC 		=	fdf.c \
-				hooks.c \
+SRC 		=	\
 
-SRC_BONUS	=	fdf_bonus.c \
-				hooks_bonus.c \
+# ===============SAMPLE================ #
 
-# ================UTILS================ #
+SRC += $(addprefix $(SAMPLE_DIR), $(SAMPLE_SRC))
 
-SRC += $(addprefix $(UTILS_DIR), $(UTILS_SRC))
-
-UTILS_DIR =		utils/
-UTILS_SRC =		parse.c \
-				errors.c \
-				colors.c \
-
-# ==============RENDERING============== #
-
-SRC += $(addprefix $(RENDERING_DIR), $(RENDERING_SRC))
-
-RENDERING_DIR =		rendering/
-RENDERING_SRC =		render.c \
+SAMPLE_DIR =		sample/
+SAMPLE_SRC =		sample_src.c \
 
 # ==========LIBS / INCLUDES============ #
 
 LIBS_DIR	=	lib/
-LIBS_PATH	=	libft/libft.a minilibx/libmlx.a neflibx/libneflibx.a
+#LIBS_PATH	=	libft/libft.a
+LIBS_PATH	=
 LIBS_PATH	:=	$(addprefix $(LIBS_DIR), $(LIBS_PATH))
 LIBS		=	$(patsubst lib%.a, %, $(notdir $(LIBS_PATH)))
-SYS_LIBS	=	Xext X11 m
+#SYS_LIBS	=	readline
+SYS_LIBS	=
 SYS_LIBS	:=	$(addprefix -l, $(SYS_LIBS))
 
 INCS_DIR	=	includes/
 INCLUDES	=	$(INCS_DIR) \
-				$(addsuffix $(INCS_DIR), $(dir $(LIBS_PATH))) \
+				$(addprefix $(dir $(LIBS_PATH)), $(INCS_DIR)) \
 				$(dir $(LIBS_PATH))
 
 # ===============CONFIGS=============== #
@@ -79,7 +68,7 @@ MAKEFLAGS	+=	--no-print-directory
 
 # ================MODES================ #
 
-MODES		:= debug fsanitize optimize full-optimize bonus
+MODES		:= debug fsanitize optimize full-optimize
 
 MODE_TRACE	:= $(BUILD_DIR).mode_trace
 LAST_MODE	:= $(shell cat $(MODE_TRACE) 2>/dev/null)
@@ -93,15 +82,13 @@ else
 endif
 
 ifeq ($(MODE), debug)
-	CFLAGS = -g3 -Og
+	CFLAGS = -g3
 else ifeq ($(MODE), fsanitize)
-	CFLAGS = -g3 -Og -fsanitize=address
+	CFLAGS = -g3 -fsanitize=address
 else ifeq ($(MODE), optimize)
 	CFLAGS += -O3
 else ifeq ($(MODE), full-optimize)
 	CFLAGS += -Ofast
-else ifeq ($(MODE), bonus)
-	SRC := $(SRC_BONUS) $(filter-out $(patsubst %_bonus.c, %.c, $(SRC_BONUS)), $(SRC))
 else ifneq ($(MODE),)
 	ERROR = MODE
 endif
@@ -157,6 +144,10 @@ force:
 .PHONY: norminette
 norminette:
 	@norminette $(addprefix $(SRC_DIR), $(SRC)) $(INCS_DIR)
+
+.PHONY: valgrind
+valgrind: debug
+	@valgrind --suppressions=.valgrindignore.txt -s --leak-check=full --track-fds=yes ./minishell
 
 -include $(DEPS)
 
